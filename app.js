@@ -1,10 +1,10 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-
+const mongoose = require("mongoose");
 const path = require("path");
 
 const errorController = require("./controllers/error");
-const mongoConnect = require("./util/database").mongoConnect;
+// const mongoConnect = require("./util/database").mongoConnect;
 
 const User = require("./models/user");
 
@@ -32,9 +32,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-  User.findByPk("67875d94c53660a6ab517b1d")
+  User.findById("67b6ce949d5617018e72ac79")
     .then((user) => {
-      req.user = new User(user.name, user.email, user.cart, user._id);
+      req.user = user;
       next();
     })
     .catch((err) => console.log(err));
@@ -45,9 +45,34 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(() => {
-  app.listen(3000);
-});
+/**Mongoose connect */
+mongoose
+  .connect(
+    "mongodb+srv://svenherm:Peacemaker7@cluster0.mymxbjk.mongodb.net/shop?retryWrites=true"
+  )
+  .then((result) => {
+    User.findOne().then((user) => {
+      if (!user) {
+        const user = new User({
+          name: "Steve",
+          email: "steve@test.com",
+          cart: {
+            items: [],
+          },
+        });
+        user.save();
+      }
+    });
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+/**for mongodb connect */
+// mongoConnect(() => {
+//   app.listen(3000);
+// });
 
 // Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE'});
 // User.hasMany(Product);
